@@ -224,7 +224,7 @@
     (send dc draw-bitmap bmp 0 0)
     (send dc draw-line 0 (imag-part (offset)) (real-part (view)) (imag-part (offset)))
     (send dc draw-line (real-part (offset)) 0 (real-part (offset)) (imag-part (view)))
-    (send dc set-text-foreground (make-object color% 1 1 1))
+    (send dc set-text-foreground (make-object color% 255 255 255))
     (send dc draw-text (format "Pos: ~a" (exact->inexact (+ (center) (/ (- (conjugate (offset)) (conjugate (/ (view) 2)))
                                                                         (* (scale) (zoom)))))) 0 0)
     (send dc draw-text (format "Center: ~a" (exact->inexact (center))) 0 20)
