@@ -136,13 +136,15 @@
                                   (set! a-1 (fl+ a-1 (sac-t z))))
                                 (list n z mag)))))))))
 (define ((point-trap up) gen test start)
-  (let ([p (* (scale) up)])
-    (λ (c) (let ([trap +inf.0] [x +inf.0] [t +inf.0])
+  (let ([p (make-flrectangular (fl* (scale) (->fl (real-part up)))
+                               (fl* (scale) (->fl (imag-part up))))])
+    (λ (c) (let ([trap +inf.0] [x +inf.0])
              (point-loop (n start) (gen z x2 y2) #f c
-                         (set! t (- z p))
-                         (set! x (/ (+ (sqr (real-part t)) (sqr (imag-part t))) (scale)))
-                         (when (< x trap) (set! trap x)))
-             (sqrt (/ trap (scale)))))))
+                         (set! x (fl/ (fl+ (flexpt (fl+ (flreal-part z) (flreal-part p)) 2.0)
+                                       (flexpt (fl+ (flimag-part z) (flimag-part p)) 2.0))
+                                      (scale)))
+                         (when (fl< x trap) (set! trap x)))
+             (flsqrt (fl/ trap (scale)))))))
 (define ((line-trap up) gen test start)
   (let ([p (* (scale) up)])
     (λ (c) (let ([trap +inf.0] [x +inf.0])
@@ -150,13 +152,10 @@
                          (set! x (min (abs (- (real-part z) (real-part p))) (abs (- (imag-part z) (imag-part p)))))
                          (when (< x trap) (set! trap x)))
              (/ trap (scale))))))
-(define ((rect-trap sz) gen test start)
+(define ((shape-trap in-shape) gen test start)
   (λ (c) (let ([trap #f])
            (point-loop (n start) (gen z x2 y2) trap c
-                       (when (and (> (real-part z) 0) (> (imag-part z) 0)
-                                  (< (/ (real-part z) (real-part sz)) 1)
-                                  (< (/ (imag-part z) (imag-part sz)) 1))
-                         (set! trap z)))
+                       (when (in-shape z) (set! trap z)))
            (or trap 0.0))))
 
 ;-------------------- colorizations --------------------------------
@@ -275,18 +274,20 @@
                          [(key=? k "q") (type 'mandelbrot) (new-world w)]
                          [(key=? k "w") (type 'julia) (new-world w)]
                          [(key=? k "e") (type 'bship) (new-world w)]
-                         [(key=? k "f1") (escape normal) (new-world w)]
-                         [(key=? k "f2") (escape smooth) (new-world w)]
-                         [(key=? k "f3") (escape potential) (new-world w)]
-                         [(key=? k "f4") (escape dem) (new-world w)]
-                         [(key=? k "f5") (escape sac) (new-world w)]
-                         [(key=? k "f6") (escape (point-trap 0)) (new-world w)]
-                         [(key=? k "f7") (escape (line-trap 0)) (new-world w)]
+                         [(key=? k "f1") (escape normal) (coloring grayscale) (new-world w)]
+                         [(key=? k "f2") (escape smooth) (coloring grayscale) (new-world w)]
+                         [(key=? k "f3") (escape potential) (coloring grayscale) (new-world w)]
+                         [(key=? k "f4") (escape dem) (coloring grayscale) (new-world w)]
+                         [(key=? k "f5") (escape sac) (coloring grayscale) (new-world w)]
+                         [(key=? k "f6") (escape (point-trap 0)) (coloring grayscale) (new-world w)]
+                         [(key=? k "f7") (escape (line-trap 0)) (coloring grayscale) (new-world w)]
                          [(key=? k "f8")
-                          (escape (rect-trap (make-rectangular (send rect-bmp get-width) (send rect-bmp get-height))))
-                          (parameterize ([coloring (let ([b (make-bytes 4 0)])
+                          (escape (shape-trap (λ (z) (fl< (+ (flexpt (fl- (flreal-part z) 128.0) 2.0)
+                                                             (flexpt (fl- (flimag-part z) 128.0) 2.0))
+                                                          16384.0))))
+                          (coloring (let ([b (make-bytes 4 0)])
                                       (λ (z) (send rect-bmp get-argb-pixels (exact-round (real-part z))
                                                    (- (send rect-bmp get-height) (exact-round (imag-part z))) 1 1 b)
-                                        b))])
-                            (new-world w))]
+                                        b)))
+                          (new-world w)]
                          [else w]))])
