@@ -284,8 +284,9 @@
                          [(key=? k "f7") (escape (line-trap 0)) (new-world w)]
                          [(key=? k "f8")
                           (escape (rect-trap (make-rectangular (send rect-bmp get-width) (send rect-bmp get-height))))
-                          (coloring (λ (z) (let ([b (make-bytes 4 0)])
-                                             (send rect-bmp get-argb-pixels (exact-round (real-part z))
+                          (parameterize ([coloring (let ([b (make-bytes 4 0)])
+                                      (λ (z) (send rect-bmp get-argb-pixels (exact-round (real-part z))
                                                    (- (send rect-bmp get-height) (exact-round (imag-part z))) 1 1 b)
-                                             b))) (new-world w)]
+                                        b))])
+                            (new-world w))]
                          [else w]))])
